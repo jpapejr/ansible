@@ -1,0 +1,150 @@
+---
+- name: iks_on_classic
+  hosts: localhost
+  gather_facts: no
+  vars:
+    default_flavor: b3c.4x16
+    updated_cluster_name: "k8s-{{ cluster_name }}"
+  tasks:
+    - name: ibmcloud_login
+      command:
+        argv:
+          - ibmcloud
+          - login
+          - -r 
+          - us-east
+          - -u 
+          - jtpape@us.ibm.com
+          - -c 
+          - "{{ account_id }}"
+          - -g 
+          - default
+          - --apikey
+          - "{{ ibmcloud_api_key }}"
+      register: auth_out
+    - name: create_iks_cluster
+      register: cluster_out
+      command:
+        creates: ./cluster-created.out
+        argv:
+          - ibmcloud
+          - ks 
+          - cluster 
+          - create 
+          - classic
+          - --name
+          - "{{ updated_cluster_name }}"
+          - --zone 
+          - "{{ z1_dc }}"
+          - --private-vlan 
+          - "{{ z1_pr_vlan }}"
+          - --public-vlan 
+          - "{{ z1_pu_vlan }}"
+          - --workers 
+          - "{{ workers_per_zone }}"
+          - -s
+          - --public-service-endpoint
+          - --flavor
+          - "{{ default_flavor }}"
+          - --version
+          - "{{ kube_version }}"
+    - debug:
+        var: cluster_out
+    - name: create_cluster_success_file
+      when: cluster_out is succeeded
+      copy:
+        content: "{{ updated_cluster_name }}"
+        dest: ./cluster-created.out
+    - name: attach_zone_2_if_desired
+      when: z2|default(false)|bool == true
+      register: z2_attach_out
+      command:
+        creates: ./z2_attached.out
+        argv:
+          - ibmcloud 
+          - ks
+          - zone
+          - add 
+          - classic 
+          - --cluster
+          - "{{ updated_cluster_name }}"
+          - --zone
+          - "{{ z2_dc }}"
+          - --private-vlan
+          - "{{ z2_pr_vlan }}"
+          - --public-vlan
+          - "{{ z2_pu_vlan }}"
+          - -p
+          - default 
+    - debug: 
+        var: z2_attach_out
+      when: z2 is defined and z2_attach_out is defined and z2_attach_out is succeeded
+    - name: create_z2_attach_success_file
+      when: z2 is defined and z2_attach_out is defined and z2_attach_out is succeeded
+      copy:
+        content: "{{ z2_attach_out }}"
+        dest: ./z2_attached.out
+    - name: attach_zone_3_if_desired
+      when: z3|default(false)|bool == true
+      register: z3_attach_out
+      command:
+        creates: ./z3_attached.out
+        argv:
+          - ibmcloud 
+          - ks
+          - zone
+          - add 
+          - classic 
+          - --cluster
+          - "{{ updated_cluster_name }}"
+          - --zone
+          - "{{ z3_dc }}"
+          - --private-vlan
+          - "{{ z3_pr_vlan }}"
+          - --public-vlan
+          - "{{ z3_pu_vlan }}"
+          - -p
+          - default 
+          - --json
+    - debug: 
+        var: z3_attach_out
+      when: z3 is defined and z3_attach_out is defined and z3_attach_out is succeeded
+    - name: create_z3_attach_success_file
+      when: z3 is defined and z3_attach_out is defined and z3_attach_out is succeeded
+      copy:
+        content: "{{ z3_attach_out }}"
+        dest: ./z3_attached.out
+    - name: wait_for_cluster_ready
+      when: cluster_out is succeeded
+      shell: while [ "$(ibmcloud ks cluster get -c {{ updated_cluster_name }} --json | jq ".state" | sed -e 's/^"//' -e 's/"$//')" != "normal" ]; do printf . && sleep 60; done
+      register: cluster_wait_out
+    - debug:
+        var: cluster_wait_out
+    - name: get_cluster_config
+      when: cluster_wait_out is succeeded
+      command:
+        argv:
+          - ibmcloud
+          - ks
+          - cluster
+          - config
+          - --yaml
+          - -c 
+          - "{{ updated_cluster_name }}"
+      register: cluster_config_out
+    - debug:
+        var: cluster_config_out
+    - name: razee_cluster_info
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          data:
+            name: "{{ updated_cluster_name }}"
+          kind: ConfigMap
+          metadata:
+            labels:
+              razee/cluster-metadata: "true"
+              razee/watch-resource: debug
+            name: razee-cluster-info
+            namespace: default
