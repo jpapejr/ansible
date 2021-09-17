@@ -1,0 +1,8 @@
+---
+- name: Deploy Terraform
+  hosts: localhost
+  connection: localhost
+  gather_facts: False
+  become: true
+  roles:
+    - { role: terraform }
