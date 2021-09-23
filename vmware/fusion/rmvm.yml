@@ -70,6 +70,6 @@
 
   - name: "Safe to delete"
     debug: 
-      msh: "You can now open the VMWare Virtual Machine Library and delete the VM"
+      msg: "You can now open the VMWare Virtual Machine Library and delete the VM"
 
   
