@@ -3,6 +3,8 @@
   vars:
     vms_path: "/Users/jtpape/Virtual\ Machines.localized"
     vmname: "a-new-vm"
+    rhorg: "some-org-id"
+    pw: "root-password-in-vm"
     src_vmx:  "{{ vms_path }}/Red Hat Enterprise Linux 8 64-bit.vmwarevm/Red Hat Enterprise Linux 8 64-bit.vmx"
     dest_vmx: "{{ vms_path }}/{{ vmname }}.vmwarevm/{{ vmname }}.vmx"
   tasks:
@@ -55,7 +57,7 @@
       dest: ~/.ssh/config
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
       block: |
-        Host {{ ip }}
+        Host {{ vmname }}
           HostName {{ ip }}
           User root
           Port 22
