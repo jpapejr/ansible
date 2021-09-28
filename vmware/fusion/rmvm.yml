@@ -44,7 +44,7 @@
   - name: "remove vm from ssh config"
     blockinfile:
       dest: ~/.ssh/config
-      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      marker: "# {{ vmname }} {mark} ANSIBLE MANAGED BLOCK"
       state: absent
       block: |
         Host {{ vmname }}
