@@ -60,10 +60,6 @@
     command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ./github.public.key /root/.ssh/known_hosts
     tags: ansible
 
-  - name: "display keyscan result"
-    debug:
-      msg: "{{ gh_key_info.stdout }}"
-
   - name: "clone ansible repo"
     command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/git clone git@github.com:jpapejr/ansible.git /root/ansible
     ignore_errors: yes
