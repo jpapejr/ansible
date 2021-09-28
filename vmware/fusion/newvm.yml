@@ -44,18 +44,28 @@
     register: rhsm_out
     tags: register
 
-  - name: "ensure local private key exists on VM"
-    command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ~/.ssh/id_rsa /root/.ssh/id_rsa
-    tags: sshconfig
-
   - name: "display RHSM result"
     debug:
       msg: "{{ rhsm_out }}"
 
+  - name: "ensure local private key exists on VM"
+    command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ~/.ssh/id_rsa /root/.ssh/id_rsa
+    tags: sshconfig
+
+  - name: "add githib.com key to known_hosts"
+    command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/ssh-keyscan github.com >> /root/.ssh/known_hosts
+    register: 
+    tags: ansible
+
+  - name: "clone ansible repo"
+    command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/git clone git@github.com:jpapejr/ansible.git
+    ignore_errors: yes
+    tags: ansible
+
   - name: "add vm to ssh config"
     blockinfile:
       dest: ~/.ssh/config
-      marker: "# {mark} ANSIBLE MANAGED BLOCK"
+      marker: "# {{ vmname }} {mark} ANSIBLE MANAGED BLOCK"
       block: |
         Host {{ vmname }}
           HostName {{ ip }}
