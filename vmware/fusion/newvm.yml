@@ -52,13 +52,20 @@
     command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ~/.ssh/id_rsa /root/.ssh/id_rsa
     tags: sshconfig
 
-  - name: "add githib.com key to known_hosts"
-    command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/ssh-keyscan github.com >> /root/.ssh/known_hosts
-    register: 
+  - name: "get github.com public ssh keys"
+    ansible.builtin.shell: ssh-keyscan github.com > ./github.public.key
+    tags: sshconfig
+
+  - name: "add github.com key to known_hosts"
+    command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ./github.public.key /root/.ssh/known_hosts
     tags: ansible
 
+  - name: "display keyscan result"
+    debug:
+      msg: "{{ gh_key_info.stdout }}"
+
   - name: "clone ansible repo"
-    command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/git clone git@github.com:jpapejr/ansible.git
+    command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/git clone git@github.com:jpapejr/ansible.git /root/ansible
     ignore_errors: yes
     tags: ansible
 
