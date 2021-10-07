@@ -1,0 +1,10 @@
+---
+- name: Deploy Rust 
+  hosts: localhost
+  connection: localhost
+  gather_facts: False
+  become: true
+  tasks:
+    - name: "install rust via rustup"
+      shell: curl https://sh.rustup.rs -sSf | sh -s -- -y
+      
