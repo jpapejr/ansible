@@ -5,6 +5,11 @@
   gather_facts: False
   become: true
   tasks:
+    - name: Yum Install Packages
+      yum:
+        name: 
+        - gcc
+        state: latest
     - name: "install rust via rustup"
       shell: curl https://sh.rustup.rs -sSf | sh -s -- -y
       
