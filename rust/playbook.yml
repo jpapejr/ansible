@@ -12,4 +12,6 @@
         state: latest
     - name: "install rust via rustup"
       shell: curl https://sh.rustup.rs -sSf | sh -s -- -y
+    - name: "ensure cargo in path for vscode shenanigans"
+      command: ln -s ~/.cargo/bin/cargo /usr/local/bin/cargo
       
