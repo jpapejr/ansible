@@ -1,0 +1,17 @@
+# Example run: ansible-playbook -i ./hosts.yml -e attach_script=./attachHost-jtpape-roks.sh -u root attach-playbook.yml
+# Ensure hosts.yml is updated to accurate IPs/hostnames first
+---
+- name: attach_hosts_to_satellite
+  hosts: all
+  gather_facts: no
+  vars:
+    attach_script: "./addHost.sh"
+  tasks:
+   - name: copy script to host
+     ansible.builtin.copy: 
+       src: "{{attach_script}}"
+       dest: /root/attach.sh
+       owner: root 
+       mode: '0744'
+   - name: run attach script on host
+     ansible.builtin.command: /root/attach.sh
