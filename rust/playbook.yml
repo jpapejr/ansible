@@ -1,0 +1,17 @@
+---
+- name: Deploy Rust 
+  hosts: localhost
+  connection: localhost
+  gather_facts: False
+  become: true
+  tasks:
+    - name: Yum Install Packages
+      yum:
+        name: 
+        - gcc
+        state: latest
+    - name: "install rust via rustup"
+      shell: curl https://sh.rustup.rs -sSf | sh -s -- -y
+    - name: "ensure cargo in path for vscode shenanigans"
+      command: ln -s ~/.cargo/bin/cargo /usr/local/bin/cargo
+      

@@ -1,0 +1,21 @@
+---
+- name: Install IBM Cloud CLI and Container Tools
+  hosts: localhost
+  connection: localhost
+  gather_facts: False
+  become: true
+  tasks:
+    - name: Fetch IBM Cloud CLI
+      ansible.builtin.unarchive:
+        src: https://download.clis.cloud.ibm.com/ibm-cloud-cli/2.1.1/IBM_Cloud_CLI_2.1.1_amd64.tar.gz
+        dest: /root
+        remote_src: yes
+    - name: Install IBM Cloud CLI
+      ansible.builtin.command: ./install
+      args:
+        chdir: /root/Bluemix_CLI
+    - name: Install kubectl 1.21
+      get_url:
+        url: https://dl.k8s.io/release/v1.22.0/bin/linux/amd64/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: u+rwx
