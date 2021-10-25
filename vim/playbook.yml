@@ -11,33 +11,26 @@
         - golang
         - curl 
         - dirmngr 
-        - apt-transport-https 
-        - lsb-release 
         - ca-certificates 
         - gcc 
-        - g++ 
+        - gcc-c++ 
         - make 
         - tmux 
         - python3-pip 
-        - bat 
+        #- bat 
         - vim
-        - hstr
+        #- hstr
         state: latest
     - name: ensure IBM cloud developer tools
-      shell:
-        command: curl -sL https://raw.githubusercontent.com/IBM-Cloud/ibm-cloud-developer-tools/master/linux-installer/idt-installer | bash
+      shell: curl -sL https://raw.githubusercontent.com/IBM-Cloud/ibm-cloud-developer-tools/master/linux-installer/idt-installer | bash
     - name: ensure bat is linked
-      shell:
-        command: ln -s /usr/bin/batcat /usr/local/bin/bat
+      shell: ln -s /usr/bin/batcat /usr/local/bin/bat
     - name: ensure Node 12 repo
-      shell:
-        command: curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
+      shell: curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
     - name: ensure Yarn repo
-      shell:
-        command: curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+      shell: curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
     - name: ensure Yarn prereqs
-      shell:
-        command: curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
+      shell: curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
     - name: ensure Node and supporting tooling
       yum:
         name:
@@ -46,33 +39,27 @@
         - ungit
         - typescript-language-server
     - name: ensure IBM Cloud Native Toolkit
-      shell:
-        command: npm i @ibmgaragecloud/cloud-native-toolkit-cli
+      shell: npm i @ibmgaragecloud/cloud-native-toolkit-cli
     - name: ensure Git credential caching enabled
-      shell:
-        command: git credential-cache start
+      shell: git credential-cache start
     - name: ensure python pip packages
       pip:
         name:
         - black 
         - python-lsp-server
     - name: ensure hstr config
-      shell:
-        command: hstr --show-configuration >> ~/.bashrc
+      shell: hstr --show-configuration >> ~/.bashrc
     - name: ensure plug.vim
-      shell:
-        command: curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+      shell: curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     - name: ensure projects directory
       file:
         path: /root/projects
         state: directory
         mode: '0755'
     - name: ensure tmux config
-      shell:
-        command: curl -vvv https://gist.githubusercontent.com/jpapejr/4c437d71511ec7c44e00302b33d8575f/raw/119c9d8585f30614b8bb218e1c050adc315ff7e4/.tmux.conf -o ~/.tmux.conf
+      shell: curl -vvv https://gist.githubusercontent.com/jpapejr/4c437d71511ec7c44e00302b33d8575f/raw/119c9d8585f30614b8bb218e1c050adc315ff7e4/.tmux.conf -o ~/.tmux.conf
     - name: ensure vim config
-      shell:
-        command: curl -vvv https://gist.githubusercontent.com/jpapejr/7ad2aba0ea3e270dc99129bd7ca764f0/raw/a839a689535d9f897d3e890e3ce3e25dde5b8245/.vimrc -o ~/.vimrc
+      shell: curl -vvv https://gist.githubusercontent.com/jpapejr/7ad2aba0ea3e270dc99129bd7ca764f0/raw/a839a689535d9f897d3e890e3ce3e25dde5b8245/.vimrc -o ~/.vimrc
             
 
 
