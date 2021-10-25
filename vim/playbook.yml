@@ -16,28 +16,27 @@
         - gcc-c++ 
         - make 
         - tmux 
-        - python3-pip 
+        - python3-pip
+        - python3-devel
         #- bat 
         - vim
         #- hstr
         state: latest
     - name: ensure IBM cloud developer tools
       shell: curl -sL https://raw.githubusercontent.com/IBM-Cloud/ibm-cloud-developer-tools/master/linux-installer/idt-installer | bash
-    - name: ensure bat is linked
-      shell: ln -s /usr/bin/batcat /usr/local/bin/bat
+    # - name: ensure bat is linked
+    #   ansible.builtin.file:
+    #     state: link
+    #     src: /usr/bin/batcat
+    #     dest: /usr/local/bin/bat
     - name: ensure Node 12 repo
       shell: curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
-    - name: ensure Yarn repo
-      shell: curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
-    - name: ensure Yarn prereqs
-      shell: curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
     - name: ensure Node and supporting tooling
       yum:
         name:
-        - yarn
         - nodejs
-        - ungit
-        - typescript-language-server
+    - name: ensure yarn, ungit, typescript-language-server
+      shell: npm install --global yarn ungit typescript-language-server
     - name: ensure IBM Cloud Native Toolkit
       shell: npm i @ibmgaragecloud/cloud-native-toolkit-cli
     - name: ensure Git credential caching enabled
@@ -47,12 +46,13 @@
         name:
         - black 
         - python-lsp-server
-    - name: ensure hstr config
-      shell: hstr --show-configuration >> ~/.bashrc
+        extra_args: --user
+    # - name: ensure hstr config
+    #   shell: hstr --show-configuration >> ~/.bashrc
     - name: ensure plug.vim
       shell: curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     - name: ensure projects directory
-      file:
+      ansible.builtin.file:
         path: /root/projects
         state: directory
         mode: '0755'
