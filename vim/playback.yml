@@ -1,0 +1,90 @@
+---
+- name: Install vim development environment
+  hosts: localhost
+  connection: localhost
+  gather_facts: False
+  become: true
+  tasks:
+    - name: Ensure prereqs
+      apt:
+        name:
+        - golang
+        - curl 
+        - dirmngr 
+        - apt-transport-https 
+        - lsb-release 
+        - ca-certificates 
+        - gcc 
+        - g++ 
+        - make 
+        - tmux 
+        - python3-pip 
+        - bat 
+        - vim
+        state: latest
+        update_cache: yes
+    - name: ensure IBM cloud developer tools
+      shell:
+        command: curl -sL https://raw.githubusercontent.com/IBM-Cloud/ibm-cloud-developer-tools/master/linux-installer/idt-installer | bash
+    - name: ensure bat is linked
+      shell:
+        command: ln -s /usr/bin/batcat /usr/local/bin/bat
+    - name: ensure Node 12 repo
+      shell:
+        command: curl -sL https://deb.nodesource.com/setup_12.x | bash -
+    - name: ensure Yarn repo
+      shell:
+        command: curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+    - name: ensure Yarn prereqs
+      shell:
+        command: echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list
+    - name: ensure Node and supporting tooling
+      apt:
+        name:
+        - yarn
+        - nodejs
+        - ungit
+        - typescript-language-server
+        update_cache: yes
+    - name: ensure IBM Cloud Native Toolkit
+      shell:
+        command: npm i @ibmgaragecloud/cloud-native-toolkit-cli
+    - name: ensure Git credential caching enabled
+      shell:
+        command: git credential-cache start
+    - name: ensure python pip packages
+      pip:
+        name:
+        - black 
+        - python-lsp-server
+    - name: ensure hstr repo
+      apt_repository:
+        repo: ppa:ultradvorka/ppa
+        state: present
+    - name: ensure hstr install
+      apt:
+        name: hstr
+        update_cache: yes
+    - name: ensure hstr config
+      shell:
+        command: hstr --show-configuration >> ~/.bashrc
+    - name: ensure plug.vim
+      shell:
+        command: curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    - name: ensure projects directory
+      file:
+        path: /root/projects
+        state: directory
+        mode: '0755'
+    - name: ensure tmux config
+      shell:
+        command: curl -vvv https://gist.githubusercontent.com/jpapejr/4c437d71511ec7c44e00302b33d8575f/raw/119c9d8585f30614b8bb218e1c050adc315ff7e4/.tmux.conf -o ~/.tmux.conf
+    - name: ensure vim config
+      shell:
+        command: curl -vvv https://gist.githubusercontent.com/jpapejr/7ad2aba0ea3e270dc99129bd7ca764f0/raw/a839a689535d9f897d3e890e3ce3e25dde5b8245/.vimrc -o ~/.vimrc
+            
+
+
+
+
+        
