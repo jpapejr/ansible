@@ -21,8 +21,8 @@
         - python3-pip 
         - bat 
         - vim
+        - hstr
         state: latest
-        update_cache: yes
     - name: ensure IBM cloud developer tools
       shell:
         command: curl -sL https://raw.githubusercontent.com/IBM-Cloud/ibm-cloud-developer-tools/master/linux-installer/idt-installer | bash
@@ -31,21 +31,20 @@
         command: ln -s /usr/bin/batcat /usr/local/bin/bat
     - name: ensure Node 12 repo
       shell:
-        command: curl -sL https://deb.nodesource.com/setup_12.x | bash -
+        command: curl -fsSL https://rpm.nodesource.com/setup_16.x | sudo bash -
     - name: ensure Yarn repo
       shell:
         command: curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
     - name: ensure Yarn prereqs
       shell:
-        command: echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list
+        command: curl -sL https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
     - name: ensure Node and supporting tooling
-      apt:
+      yum:
         name:
         - yarn
         - nodejs
         - ungit
         - typescript-language-server
-        update_cache: yes
     - name: ensure IBM Cloud Native Toolkit
       shell:
         command: npm i @ibmgaragecloud/cloud-native-toolkit-cli
@@ -57,14 +56,6 @@
         name:
         - black 
         - python-lsp-server
-    - name: ensure hstr repo
-      apt_repository:
-        repo: ppa:ultradvorka/ppa
-        state: present
-    - name: ensure hstr install
-      apt:
-        name: hstr
-        update_cache: yes
     - name: ensure hstr config
       shell:
         command: hstr --show-configuration >> ~/.bashrc
