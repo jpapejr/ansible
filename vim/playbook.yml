@@ -6,7 +6,7 @@
   become: true
   tasks:
     - name: Ensure prereqs
-      apt:
+      yum:
         name:
         - golang
         - curl 
