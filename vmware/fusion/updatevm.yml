@@ -1,0 +1,80 @@
+- hosts: localhost
+  connection: localhost
+  vars:
+    vms_path: "/Users/jtpape/Virtual\ Machines.localized"
+    vmname: "a-new-vm"
+    rhorg: "some-org-id"
+    pw: "root-password-in-vm"
+    src_vmx:  "{{ vms_path }}/Red Hat Enterprise Linux 8 64-bit.vmwarevm/Red Hat Enterprise Linux 8 64-bit.vmx"
+    dest_vmx: "{{ vms_path }}/{{ vmname }}.vmwarevm/{{ vmname }}.vmx"
+  tasks:
+
+  - name: check if vm exists
+    stat:
+      follow: yes
+      path: "{{ dest_vmx }}"
+    register: stat_result
+
+  - name: "start virtual machine"
+    command: vmrun -T fusion start "{{ dest_vmx }}"
+    when: stat_result.stat.exists == true
+
+  - name: "get ip address"
+    command: vmrun -T fusion getGuestIPAddress "{{ dest_vmx }}" -wait
+    register: ip_address
+    when: stat_result.stat.exists == true
+    tags: sshconfig 
+
+  - name: "set fact: ip"
+    set_fact:
+      ip: "{{ ip_address.stdout }}"
+    tags: sshconfig
+
+  - name: "print ip address"
+    debug:
+      msg: "VM IP: {{ ip_address.stdout }}, VM Cockpit http://{{ ip_address.stdout }}"
+
+  - name: "update vm hostname"
+    command: vmrun -gu root -gp {{ pw }}  -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/hostnamectl set-hostname {{ vmname }}
+
+      #  - name: "ensure vm is registered with RHSM"
+      #    command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/sbin/subscription-manager register --activationkey=devbox --org="{{ rhorg }}" --force
+      #    register: rhsm_out
+      #    tags: register
+      #
+      #  - name: "display RHSM result"
+      #    debug:
+      #      msg: "{{ rhsm_out }}"
+      #
+      #  - name: "ensure local private key exists on VM"
+      #    command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ~/.ssh/id_rsa /root/.ssh/id_rsa
+      #    tags: sshconfig
+      #
+      #  - name: "get github.com public ssh keys"
+      #    ansible.builtin.shell: ssh-keyscan github.com > ./github.public.key
+      #    tags: sshconfig
+      #
+      #  - name: "add github.com key to known_hosts"
+      #    command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ./github.public.key /root/.ssh/known_hosts
+      #    tags: ansible
+      #
+      #  - name: "clone ansible repo"
+      #    command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/git clone git@github.com:jpapejr/ansible.git /root/ansible
+      #    ignore_errors: yes
+      #    tags: ansible
+
+  - name: "add vm to ssh config"
+    blockinfile:
+      dest: ~/.ssh/config
+      marker: "# {{ vmname }} {mark} ANSIBLE MANAGED BLOCK"
+      block: |
+        Host {{ vmname }}
+          HostName {{ ip }}
+          User root
+          Port 22
+          UserKnownHostsFile /dev/null
+          StrictHostKeyChecking no
+          PasswordAuthentication yes
+          ForwardAgent yes
+          LogLevel FATAL
+    tags: sshconfig
