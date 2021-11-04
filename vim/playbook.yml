@@ -32,7 +32,7 @@
     - name: configure vim build
       shell: cd ./vim && ./configure --enable-multibyte --enable-cscope --with-python3-command=python3.6 --enable-python3interp=yes --prefix=/usr/local
     - name: build vim
-      shell: make install
+      shell: cd ./vim && make install
     - name: ensure IBM cloud developer tools
       shell: curl -sL https://raw.githubusercontent.com/IBM-Cloud/ibm-cloud-developer-tools/master/linux-installer/idt-installer | bash
     # - name: ensure bat is linked
