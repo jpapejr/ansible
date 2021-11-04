@@ -27,6 +27,10 @@
         name:
         - vim
         state: removed
+    - name: remove any previous clones
+      file:
+        path: ./vim
+        state: absent
     - name: get vim source
       shell: git clone https://github.com/vim/vim.git && cd ./vim
     - name: configure vim build
