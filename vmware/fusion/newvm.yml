@@ -60,6 +60,17 @@
     command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ./github.public.key /root/.ssh/known_hosts
     tags: ansible
 
+
+  - name: "copy Fish config to VM"
+    command: vmrun -gu root -gp {{ pw }} -T fusion CopyFileFromHostToGuest "{{ dest_vmx }}" ~/.config/fish /root/.config/fish
+    tags: fish
+
+
+  - name: "install fish binary"
+    command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/yum install https://download.opensuse.org/repositories/shells:/fish:/release:/3/CentOS_8/x86_64/fish-3.3.1-1.11.x86_64.rpm
+    ignore_errors: no 
+    tags: fish
+
   - name: "clone ansible repo"
     command: vmrun -gu root -gp {{ pw }} -T fusion runProgramInGuest "{{ dest_vmx }}" /usr/bin/git clone git@github.com:jpapejr/ansible.git /root/ansible
     ignore_errors: yes
