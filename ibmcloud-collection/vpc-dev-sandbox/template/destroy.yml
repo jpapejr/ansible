@@ -1,0 +1,19 @@
+- name: Delete FIP
+  command: "ibmcloud is ipd {{ ansible_facts['FIP']['id'] }} -f"
+  when: FIP != None
+
+- name: Clear FIP fact
+  set_fact:
+    cacheable: True
+    FIP: 
+  when: FIP != None
+
+- name: Delete VSI
+  command: "ibmcloud is ind {{ ansible_facts['VSI']['id'] }} -f"
+  when: VSI != None
+
+- name: Clear VSI fact
+  set_fact:
+    cacheable: True
+    VSI:
+  when: VSI != None

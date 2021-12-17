@@ -1,0 +1,36 @@
+---
+- name: Create IBM Cloud VPC VSI
+  hosts: localhost
+  collections:
+   - ibm.cloudcollection
+
+  tasks:
+    - name: Fetch the variables from var file
+      include_vars:
+        file: vars.yml
+  
+    - name: Clone template locally
+      copy:
+        src: ./template/
+        dest: "./boxes/{{ vmname }}"
+
+    - name: Configure vars file for new box
+      blockinfile:
+        create: True
+        dest: "./boxes/{{ vmname }}/vars.yml"
+        block: |
+          ---
+          vmname: {{ vmname }}
+          ssh_key: {{ ssh_key }}
+          vpc_id: {{ vpc.id }}
+          subnet_id: {{ subnet.id }}
+          rhorg: {{ rhorg }}
+
+    - name: Configure placeholders in template provisioning tasks
+      replace:
+        path: "./boxes/{{ vmname }}/provision.yml"
+        regexp: '__VMNAME__'
+        replace: "{{ vmname }}"
+    
+    
+    - include: "./boxes/{{ vmname }}/provision.yml"

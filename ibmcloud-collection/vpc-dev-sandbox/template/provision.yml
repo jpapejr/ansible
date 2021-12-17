@@ -1,0 +1,155 @@
+- name: Fetch the variables from template var file
+  include_vars:
+    file: ./vars.yml
+
+- name: Retrieve image list
+  ibm_is_images_info:
+  register: images_list
+
+- name: Set VM image name/id dictionary fact
+  set_fact:
+    cacheable: True
+    image_dict: "{{ images_list.resource.images | items2dict(key_name='name', value_name='id') }}"
+
+- name: Configure VSI
+  ibm_is_instance:
+    name: "{{ vmname }}"
+    resource_group: c635d4a5a24b4ee5824e79005fd6a7ba
+    state: available
+    id: "{{ __VMNAME___vsi.id | default(omit) }}"
+    vpc: "{{ vpc.id }}"
+    profile: "cx2-2x4"
+    image: "{{ image_dict['ibm-redhat-8-4-minimal-amd64-1'] }}"
+    keys:
+      - "{{ ssh_key }}"
+    primary_network_interface:
+      - subnet: "{{ subnet.id }}"
+    zone: us-east-1
+  register: vsi_create_output
+
+- name: Save VSI as fact
+  set_fact:
+    cacheable: True
+    __VMNAME___vsi: "{{ vsi_create_output.resource }}"
+
+- name: Configure Floating IP Address
+  ibm_is_floating_ip:
+    name: "{{ vmname }}-fip"
+    resource_group: c635d4a5a24b4ee5824e79005fd6a7ba
+    state: available
+    id: "{{ __VMNAME___fip.id | default(omit) }}"
+    target: "{{ __VMNAME___vsi.primary_network_interface[0]['id'] }}"
+  register: fip_create_output
+
+- name: Save Floating IP as fact
+  set_fact:
+    cacheable: True
+    __VMNAME___fip: "{{ fip_create_output.resource }}"
+
+- name: Print Floating IP Address
+  debug:
+    msg: "IP Address: {{ __VMNAME___fip.address }}"
+
+- name: Add VSI to Ansible inventory
+  add_host:
+    name: "{{ __VMNAME___fip.address }}"
+    ansible_user: root
+    groups: "{{ vmname }}"
+    ansible_ssh_extra_args: -o StrictHostKeyChecking=no
+
+- name: Add vm to ssh config"
+  blockinfile:
+    dest: ~/.ssh/config
+    marker: "# {{ vmname }} {mark} ANSIBLE MANAGED BLOCK"
+    block: |
+      Host {{ vmname }}
+        HostName {{ __VMNAME___fip.address }}
+        User root
+        Port 22
+        UserKnownHostsFile /dev/null
+        StrictHostKeyChecking no
+        PasswordAuthentication yes
+        ForwardAgent yes
+        LogLevel FATAL
+
+- name: Wait for VSI to become reachable over SSH
+  delegate_to: "{{ vmname }}"
+  wait_for_connection:
+
+- name: Check Ansible connection to new VSI
+  delegate_to: "{{ vmname }}"
+  command: cat /etc/os-release
+  register: os_info
+
+- name: Print OS information
+  debug:
+    var: os_info.stdout_lines
+
+- name: Get github.com public ssh key
+  delegate_to: "{{ vmname }}"
+  ansible.builtin.shell: ssh-keyscan github.com > ./github.public.key
+
+
+- name: Add github.com key to known_hosts
+  delegate_to: "{{ vmname }}"
+  command: cp ./github.public.key /root/.ssh/known_hosts
+  become: true
+
+- name: Configure local private key on VSI
+  delegate_to: "{{ vmname }}"
+  become: True
+  copy:
+    src: ~/.ssh/id_rsa
+    dest: /root/.ssh
+    owner: root
+    group: root
+    mode: 0700
+
+# - name: Copy RHSM config to VM
+#   delegate_to: "{{ vmname }}"
+#   become: True
+#   copy:
+#     src: ./rhsm.conf
+#     dest: /etc/rhsm/rhsm.conf
+#     owner: root
+#     group: root
+#     mode: 0644
+
+# - name: "ensure vm is registered with RHSM"
+#   delegate_to: "{{ vmname }}"
+#   command: /usr/sbin/subscription-manager register --activationkey=devbox --org="{{ rhorg }}" --force
+#   register: rhsm_out
+
+# - name: "display RHSM result"
+#   debug:
+#     msg: "{{ rhsm_out }}"
+
+- name: Configure packages on VSI
+  delegate_to: "{{ vmname }}"
+  yum:
+    name:
+      - git
+    state: present
+
+- name: Configure Fish on VSI
+  delegate_to: "{{ vmname }}"
+  yum:
+    name:
+      - https://download.opensuse.org/repositories/shells:/fish:/release:/3/CentOS_8/x86_64/fish-3.3.1-1.11.x86_64.rpm
+    disable_gpg_check: True
+    state: present
+
+- name: Copy Fish config to VM
+  delegate_to: "{{ vmname }}"
+  become: true
+  copy:
+    src: ~/.config/fish
+    dest: /root/.config
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Clone ansible repo
+  delegate_to: "{{ vmname }}"
+  command: /usr/bin/git clone git@github.com:jpapejr/ansible.git /root/ansible
+  ignore_errors: yes

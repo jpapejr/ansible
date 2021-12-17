@@ -1,0 +1,4 @@
+---
+vmname: my-vm
+ssh_key: add_via_cli
+rhorg: add_via_cli

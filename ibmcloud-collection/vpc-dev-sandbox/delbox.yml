@@ -1,0 +1,23 @@
+---
+- name: Destroy IBM Cloud VPC VSI
+  hosts: localhost
+  collections:
+   - ibm.cloudcollection
+  tasks:
+    - name: Fetch the variables from template var file
+      include_vars:
+        file: ./vars.yml
+
+    - name: Configure FIP placeholder in template destroy tasks
+      replace:
+        path: "./boxes/{{ vmname }}/destroy.yml"
+        regexp: 'FIP'
+        replace: "{{ vmname }}_fip"
+
+    - name: Configure VSI placeholder in template destroy tasks
+      replace:
+        path: "./boxes/{{ vmname }}/destroy.yml"
+        regexp: 'VSI'
+        replace: "{{ vmname }}_vsi"
+          
+    - include: "./boxes/{{ vmname }}/destroy.yml"

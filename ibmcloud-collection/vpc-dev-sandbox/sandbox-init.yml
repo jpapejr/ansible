@@ -1,0 +1,49 @@
+---
+- name: Create IBM Cloud VPC-based dev sandbox
+  hosts: localhost
+  collections:
+   - ibm.cloudcollection
+
+  tasks:
+  - name: Fetch the variables from var file
+    include_vars:
+      file: vars.yml
+
+  - name: Configure VPC
+    ibm_is_vpc:
+      name: jtpape-sandbox
+      resource_group: c635d4a5a24b4ee5824e79005fd6a7ba
+      state: available
+      id: "{{ vpc.id | default(omit) }}"
+    register: vpc_create_output
+
+  - name: Save VPC as fact
+    set_fact:
+      cacheable: True
+      vpc: "{{ vpc_create_output.resource }}"
+
+  - name: Configure VPC Subnet
+    ibm_is_subnet:
+      name: "sandbox-01"
+      resource_group: c635d4a5a24b4ee5824e79005fd6a7ba
+      state: available
+      id: "{{ subnet.id | default(omit) }}"
+      vpc: "{{ vpc.id }}"
+      total_ipv4_address_count: 32
+      zone: us-east-1
+    register: subnet_create_output
+
+  - name: Save VPC Subnet as fact
+    set_fact:
+      cacheable: True
+      subnet: "{{ subnet_create_output.resource }}"
+
+  - name: Configure Security Group Rule to open SSH on the VSI
+    ibm_is_security_group_rule:
+      state: available
+      group: "{{ vpc.default_security_group }}"
+      direction: inbound
+      remote: 0.0.0.0/0
+      tcp:
+        - port_max: 22
+          port_min: 22
