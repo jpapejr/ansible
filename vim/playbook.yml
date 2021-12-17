@@ -74,7 +74,7 @@
     - name: ensure tmux config
       shell: curl -vvv https://gist.githubusercontent.com/jpapejr/4c437d71511ec7c44e00302b33d8575f/raw/119c9d8585f30614b8bb218e1c050adc315ff7e4/.tmux.conf -o ~/.tmux.conf
     - name: ensure vim config
-      shell: curl -vvv https://gist.githubusercontent.com/jpapejr/7ad2aba0ea3e270dc99129bd7ca764f0/raw/bbd4339e40f50de793d09c2fe5f709038dfc6e39/.vimrc -o ~/.vimrc
+      shell: curl -vvv https://gist.githubusercontent.com/jpapejr/7ad2aba0ea3e270dc99129bd7ca764f0/raw/c6510dd0353f7a1c7d797fa53bbce989ffa991b3/.vimrc -o ~/.vimrc
             
 
 
